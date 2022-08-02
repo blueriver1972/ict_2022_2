@@ -22,4 +22,4 @@
   - [@ssssssum](https://github.com/ssssssum)  
   - [@Ryker-DS](https://github.com/Ryker-DS)  
   - [@ddaegeee](https://github.com/ddaegeee)
-  - [@blueriver1972](https://github.com/blueriver1972)  
+  - [@blue1972](https://github.com/blue1972)  
