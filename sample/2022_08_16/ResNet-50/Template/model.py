@@ -1,65 +1,44 @@
 import tensorflow as tf
 from tensorflow.keras import Model
 from tensorflow.keras.layers import (Conv2D, Dense,    GlobalAveragePooling2D,
-                                     Layer, MaxPool2D)
+                                     Layer, MaxPool2D, ReLU)
 
-class Stem(Layer):
-    def __init__(self, **kwargs):
-        super(Stem, sefl).__init__(**kwargs)
-        self.hidden = [
-            Conv2D(filters=64, 
-                   kernel_size=(7, 7),
-                   strides=(2, 2),
-                   activation="relu",
-                   padding="same",
-            ),
-            MaxPool2D(pool_size=(3, 3), strides=(2, 2), padding="same"),
-            Conv2D(filters=64, kernel_size=(3, 3), strides=(2, 2), activation="relu", padding="same"),
-        ] 
-    
-    def call(self, inputs):
-        x = inputs 
-        for layer in self.hidden:
-            x = layer(x)
-        return X
 
-class ResNet50Model(Layer):
-    def __init__(self, filter, strider):
-        super(ResNet50Model, self).__init__()
 
-        self.paths = [         
-           [Conv2D(filters=filter, kernel_size=(3, 3)), strides=(strider, strider), padding="same",],
-        ] 
+class ResidualBlock(Layer):
+    def __init__(self, _filter, **kwargs):
+        super(ResidualBlock, self).__init__(**kwargs)
+        self.conv1 = Conv2D(filters=64, kernel_size=(3, 3), activation="relu", padding="same")
+        self.batch_norm1 = BatchNormalization()
+        self.relu1 = ReLU()
+        self.cov2 = Conv2D(filters=64, kernel_size=(3, 3), activation="relu", padding="same")
+        self.batch_norm2 = BatchNormalization()
+        seelf.out = ReLU()
         
-    def call(self, input):
-        x = path_outs 
-        for path in self.paths:
-            for layer in path:
-                x = layer(x)
-            path_outs.append(x)
-        return self.depth_concat(path_outs, axis =3) 
+        
+    def call(self, inputs):
+        conv1 = self.conv1(inputs)
+        batch_norm1 = self.batch_norm1(conv1)
+        relu1 = self.relu(batch_norm1)
+        conv2 = self.conv2(relu1)
+        batch_norm2 = self.batch_norm1(conv2)
+        return self.relu([conv1, batch_norm2])
 
 class ResNet50(Model):
     def __init__(self, output_dim, **kwargs):
         super(ResNet50, self).__init__(**kwarrgs)
         self.output_dim = output_dim
         self.paths = [
-            Stem(name="stem"),
-            #INFO [3x3, 3x3, 3x3, 3x3, , 3x3_reduce, 3x3, 5x5_reduce, 5x5, 1x1_pool]
-            ResNet50Model(64, 1),
-            ResNet50Model(64, 1),  
-            ResNet50Model(64, 1),
-            ResNet50Model(64, 1),
-             
-            ResNet50Model(128, 2),
-            ResNet50Model(128, 1),
-            ResNet50Model(128, 1),
-            ResNet50Model(128, 1),
+
+            ResidualBlock([64, 64, 256], name="ResBlock1"),
+            ResidualBlock([128, 128, 512], name="ResBlock2"), 
+            ResidualBlock([256, 256, 1024], name="ResBlock3"), 
+            ResidualBlock([512, 512, 2048], name="ResBlock4"),  
             
             GlobalAvgragePooling2D()
             
         ]
-        self.out = Dense(10)
+        self.out = Dense(output_dim)
         
 
     def call(self, inputs):

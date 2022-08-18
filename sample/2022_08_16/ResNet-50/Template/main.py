@@ -1,4 +1,4 @@
-from model import InceptionV1
+from model import ResNet50
 from tensorflow.keras.datasets import cifar10
 from tensorflow.keras.losses import SparseCategoricalCrossentropy
 
