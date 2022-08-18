@@ -10,6 +10,7 @@ if __name__ == "__main__":
     #TODO Data Load
     (train_images, train_labels), (test_images, test_labels) = cifar10.load_data()
     
+    train_images = train_images/256
     model = VGG()
     
    
