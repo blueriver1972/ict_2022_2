@@ -57,7 +57,7 @@ class ResNet50(Model):
             ResNet50Model(128, 1),
             
             GlobalAvgragePooling2D()
-            Dropout(rate=0.4)
+            
         ]
         self.out = Dense(10)
         
