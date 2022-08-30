@@ -283,7 +283,7 @@ class Efficient(Model):
         x = self.BN_input(x)
         x = self.Swich_input(x)
         
-        for block in self.BLOCKS:
+        for block in self.Blocks:
             x = block(x)
 
                 is_skip = True
