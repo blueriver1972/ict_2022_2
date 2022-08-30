@@ -182,15 +182,31 @@ class MBConv(Layer):
             strides=self.strides,
             padding=self.padding,
         )
+        self.BN_depth = BatchNormalization()
+        self.Swish_depth = Swish()
+        #logger.info(f"SE.__init__ {self.filters}")
+        self.SE = SE(self.filters)
+        self.Conv2D_SE = Conv2D(
+            self.filters_out, kernel_size=(1, 1), strides=1, padding="same"
+        )
+        self.BN_SE = BatchNormalization()
+        if self.is_skip and self.strides == 1 and self.filters_in == self.filters_out:
+            self.add = Add()
+        super(MBConv, self).build(input_shape)
+
+        
 
     def call(self, inputs):
+        #logger.info(f"MBConv is_skip: {{self.is_skip}")
         # in dims = [batch, H, W, filters_in]
         # out dims = [batch, H/s, W/s, filters_out]
         x = inputs
+        #logger.info(f"MBConv_input: {inputs.shape}")
         if 1 < self.expand:
-            x = Conv2D(self.filters, kernel_size=(1, 1), strides=1, padding="same")(
-                inputs
-            )
+            x = self.Conv2D_expand(inputs)
+            #logger.info(f"MBConv__Conv2d_Expand: {inputs.shape}")
+            x = self.BN_expand(x)
+            
             x = BatchNormalization()(x)
             x = Swish()(x)
 
