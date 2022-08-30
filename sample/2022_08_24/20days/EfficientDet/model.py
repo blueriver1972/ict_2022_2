@@ -8,7 +8,7 @@ from tensorflow.keras.layers import (Add, BatchNormalization, Conv2D, Dense,
                                      ReLU, Reshape)
 import logging
 
-logger = logging.
+#logger = logging.
 
 BLOCKS = [
     {
@@ -120,17 +120,29 @@ class SE(Layer):
             activation="relu",
             padding="same",
         )
-        self.Conve2D_decode = Conv2D()
+        self.Conve2D_decode = Conv2D(
+            self.filters,
+            kernel_size=(1, 1),
+            strides=1,
+            activation="sigmoid",
+            padding="same",
+        )
+        self.multiply = Multiply()
+        super(SE, self).build(input_shape)
 
     def call(self, inputs):
         # in dims = [batch, H, W, channels]
         # out dims = [batch, 1, 1, channels]        @GlobalAveragePooling2D
         # out dims = [batch, 1, 1, channels/ratio]  @Conv2D_1
         # out dims = [batch, 1, 1, channels]        @COnv2D_2
-        x = GlobalAveragePooling2D(inputs, keepdims=True)(inputs)
-        x = Conv2D(self.se_filters, strides=1, activation="relu", padding="same")(x)
-        x = Conv2D(self.filters, strides=1, activation="sigmoid", paddig="same")(x)
-        return Multiply()([inputs, x])
+        #logger.inof(f"SE_input: {inputs.shape}")
+        x = self.GAP(inputs)
+        #logger.inof(f"SE_GAP: {x.shape}")
+        x = self.Conv2D_encode(x)
+        #logger.info(f"SE_encode: {x.shape}")
+        x = self.Conv2D_decode(x)
+        #logger.info(f"SE_decode: {x.shape}")
+        return self.multiply([inputs, x])
 
 
 class MBConv(Layer):
