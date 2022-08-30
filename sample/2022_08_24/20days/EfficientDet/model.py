@@ -206,88 +206,138 @@ class MBConv(Layer):
             x = self.Conv2D_expand(inputs)
             #logger.info(f"MBConv__Conv2d_Expand: {inputs.shape}")
             x = self.BN_expand(x)
+            #logger.info(f"MBConv__BN_Expand: {inputs.shape}")     
+            x = self.Swish_expand(x)   
+            #logger.info(f"MBConv_Swish_Expand: {inputs.shape}")     
             
-            x = BatchNormalization()(x)
-            x = Swish()(x)
+        if 2 == self.strides:
+            x = self.ZeroPadding2D(x)
+            #logger.info(f"MBConv__ZeroPadding2D: {inputs.shape}")  
+             
+        x = self.DepthwiseConv2D(x)
+        #logger.info(f"MBConv__DepthwiseConv2D: {inputs.shape}")  
+       
+        x = self.BN_depth(x)
+        #logger.info(f"BN_depth: {inputs.shape}")   
+        x = self.Swish_depth(x)
+        #logger.info(f"BN_Swish_depth: {inputs.shape}") 
+        x = self.SE(x)
+        #logger.info(f"BN_depth: {inputs.shape}")  
+        x = self.Conv2D_SE(x)
+        x = self.BN_SE(x)
 
-        x = DepthwiseConv2D(
-            self.filters,
-            kernel_size=self.kernel_size,
-            strides=self.strides,
-            padding=self.padding,
-        )(x)
-        x = BatchNormalization()(x)
-        x = Swish()(x)
-        x = SE(self.filters)(x)
-        x = Conv2D(self.filters_out, kernel_size=(1, 1), strides=1, padding="same")(x)
-        x = BatchNormalization(x)
-        if self.is_skip:
-            x = Add([x, inputs])
+       if self.is_skip and self.strides == 1 and self.filtes_in == self.filtes_out:
+           x = self.add([x, inputs])
         return x
 
 
-class MBCov1(Layer):
-    def __init__(self, filters_in, filters_out, kernel_size, strides=1, **kwargs):
-        self.filters = filters_in * 6
-        self.filters_out = filters_out
-        self.strides = strides
-        self.kernel_size = kernel_size
-        self.padding = "valid" if strides == 2 else "same"
+# class MBCov1(Layer):
+#     def __init__(self, filters_in, filters_out, kernel_size, strides=1, **kwargs):
+#         self.filters = filters_in * 6
+#         self.filters_out = filters_out
+#         self.strides = strides
+#         self.kernel_size = kernel_size
+#         self.padding = "valid" if strides == 2 else "same"
 
-    def call(self, inputs):
-        # in dims = [batch, H, W, filters_in]
-        # out dims = [batch, H/s, W/s, filters_out]
-        x = DepthwiseConv2D()(input)
-        x = BatchNormalization()(x)
-        x = Swish()(x)
-        x = SE()(x)
-        x = Conv2D()(x)
-        return BatchNormalization()(x)
+#     def call(self, inputs):
+#         # in dims = [batch, H, W, filters_in]
+#         # out dims = [batch, H/s, W/s, filters_out]
+#         x = DepthwiseConv2D()(input)
+#         x = BatchNormalization()(x)
+#         x = Swish()(x)
+#         x = SE()(x)
+#         x = Conv2D()(x)
+#         return BatchNormalization()(x)
 
 
-class MBCov6(Layer):
-    def __init__(self, filters_in, filters_out, kernel_size, strides=1, **kwargs):
-        self.filters = filters_in * 6
-        self.filters_out = filters_out
-        self.strides = strides
-        self.kernel_size = kernel_size
-        self.padding = "valid" if strides == 2 else "same"
+# class MBCov6(Layer):
+#     def __init__(self, filters_in, filters_out, kernel_size, strides=1, **kwargs):
+#         self.filters = filters_in * 6
+#         self.filters_out = filters_out
+#         self.strides = strides
+#         self.kernel_size = kernel_size
+#         self.padding = "valid" if strides == 2 else "same"
 
-    def call(self, inputs):
-        # NOTE: Layer에 필요한 args(filters, kernel_size, strides, padding)
-        # NOTE: filters == channel of out_dims
-        # NOTE: ((W - k + 2P) / S) + 1
-        # NOTE: W: width, k: kernel size, P: padding, S: stride
+#     def call(self, inputs):
+#         # NOTE: Layer에 필요한 args(filters, kernel_size, strides, padding)
+#         # NOTE: filters == channel of out_dims
+#         # NOTE: ((W - k + 2P) / S) + 1
+#         # NOTE: W: width, k: kernel size, P: padding, S: stride
 
-        # in dims = [batch, H, W, filters_in]
-        # out dims = [batch, H/s, W/s, filters_out]
-        x = Conv2D(self.filters, kernel_size=(1, 1), strides=1, padding="same")(inputs)
-        x = BatchNormalization()(x)
-        x = Swish()(x)
-        x = DepthwiseConv2D(
-            self.filters,
-            kernel_size=self.kernel_size,
-            strides=self.strides,
-            padding=self.padding,
-        )(x)
-        x = BatchNormalization()(x)
-        x = Swish()(x)
-        x = SE(self.filters)(x)
-        x = Conv2D(self.filters_out, kernel_size=(1, 1), strides=1, padding="same")(x)
-        return BatchNormalization()(x)
+#         # in dims = [batch, H, W, filters_in]
+#         # out dims = [batch, H/s, W/s, filters_out]
+#         x = Conv2D(self.filters, kernel_size=(1, 1), strides=1, padding="same")(inputs)
+#         x = BatchNormalization()(x)
+#         x = Swish()(x)
+#         x = DepthwiseConv2D(
+#             self.filters,
+#             kernel_size=self.kernel_size,
+#             strides=self.strides,
+#             padding=self.padding,
+#         )(x)
+#         x = BatchNormalization()(x)
+#         x = Swish()(x)
+#         x = SE(self.filters)(x)
+#         x = Conv2D(self.filters_out, kernel_size=(1, 1), strides=1, padding="same")(x)
+#         return BatchNormalization()(x)
 
 
 class Efficient(Model):
     def __init__(self, output_dim, **kwargs):
         super(Efficient, self).__init__()
-        self.output_dim output_dim
+        self.output_dim = output_dim
 
-    def call(self, inputs):
-        self.Conv2D_input = Conv2D(32, kernel_size=(3, 3), strides=2, padding="valid")
+    def build(self, input_shape):
+        self.ZeroPadding2D_input = ZeroPadding2D(
+            padding=_correct_apd(input_shape, (3,3))            
+        )
+        
+        self.Conv2D_input = Conv2D(32, kernel_size=(3, 3), strides=2, padidng="valid")
         self.BN_input = BatchNormalization()
         self.Swich_input = Swish()
-        for block in BLOCKS:
-            for _ in range(block["repeats"]):
+        self.Blocks = []
+        for i, block in enumerate(BLOCKS):
+            for j in range(block["repeats"]):
+
+                filters_in = block["filters_in"]
+                filters_out = block["filters_out"]
+                filters_size = (block["kernel_size"], block["kernel_size"])
+                strides = block["strides"]
+                is_skip = False 
+                
+                if 0 < j:
+                    filters_in = filters_out
+                    strides = 1
+                    is_skip = True  
+                name = f"bm_block_{i+1}_{j+1}"
+                b = MBConv(
+                    filters_in,
+                    filters_out,
+                    kernel_size,
+                    sitrides,
+                    block["expand_ratio"],
+                    is_skip,
+                    name=name,
+                )
+                self.Blcoks.append(b)
+        
+        self.Conv2D_out  = Conv2D(1280, kernel_size=(1, 1), strides=1, padding="valid")
+        self.BN_out = BatchNormalization()
+        self.Swith_out = Swish()
+        self.GAP_out = GlobalAveragePooling2D()
+        self.out = Dense(self.output_dim, activation="softmax")      
+        super(Efficient, self).build(input_shape)
+        
+        
+    def call(self, inputs):
+        x = self.ZeroPadding2D_input(inputs)
+        x = self.Conv2D_input(x)
+        x = self.BN_input(x)
+        x = self.Swich_input(x)
+        
+        for block in self.BLOCKS:
+            x = block(x)
+
                 is_skip = True
                 if block["filters_in"] == block["filters_out"]:
                     is_skip = truediv(kernel_size = (block["kernel_size], block["kernel_size"]), b)
@@ -300,9 +350,9 @@ class Efficient(Model):
                     is_skip,
                 )
                 self.Bloacks.append(b)
-        self.Conv2D_out = Conv2D(1280, kernel_size=(1, 1), strides=1, padding="valid")(inputs)
-        self.BN_out = BatchNormalization()
-        self.Swith_out = Swish()
-        self.GAP_out = GlobalAveragePooling2D()
-        self.out = Dense(self.output_dim, activation="softmax")
-        return x
+        x = self.Conv2D_out(x))
+        x = self.BN_out(x)
+        x = self.Swith_out(x)
+        x = self.GAP_out(x)
+
+        return self.out(x)
