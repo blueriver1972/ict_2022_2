@@ -230,58 +230,6 @@ class MBConv(Layer):
            x = self.add([x, inputs])
         return x
 
-
-# class MBCov1(Layer):
-#     def __init__(self, filters_in, filters_out, kernel_size, strides=1, **kwargs):
-#         self.filters = filters_in * 6
-#         self.filters_out = filters_out
-#         self.strides = strides
-#         self.kernel_size = kernel_size
-#         self.padding = "valid" if strides == 2 else "same"
-
-#     def call(self, inputs):
-#         # in dims = [batch, H, W, filters_in]
-#         # out dims = [batch, H/s, W/s, filters_out]
-#         x = DepthwiseConv2D()(input)
-#         x = BatchNormalization()(x)
-#         x = Swish()(x)
-#         x = SE()(x)
-#         x = Conv2D()(x)
-#         return BatchNormalization()(x)
-
-
-# class MBCov6(Layer):
-#     def __init__(self, filters_in, filters_out, kernel_size, strides=1, **kwargs):
-#         self.filters = filters_in * 6
-#         self.filters_out = filters_out
-#         self.strides = strides
-#         self.kernel_size = kernel_size
-#         self.padding = "valid" if strides == 2 else "same"
-
-#     def call(self, inputs):
-#         # NOTE: Layer에 필요한 args(filters, kernel_size, strides, padding)
-#         # NOTE: filters == channel of out_dims
-#         # NOTE: ((W - k + 2P) / S) + 1
-#         # NOTE: W: width, k: kernel size, P: padding, S: stride
-
-#         # in dims = [batch, H, W, filters_in]
-#         # out dims = [batch, H/s, W/s, filters_out]
-#         x = Conv2D(self.filters, kernel_size=(1, 1), strides=1, padding="same")(inputs)
-#         x = BatchNormalization()(x)
-#         x = Swish()(x)
-#         x = DepthwiseConv2D(
-#             self.filters,
-#             kernel_size=self.kernel_size,
-#             strides=self.strides,
-#             padding=self.padding,
-#         )(x)
-#         x = BatchNormalization()(x)
-#         x = Swish()(x)
-#         x = SE(self.filters)(x)
-#         x = Conv2D(self.filters_out, kernel_size=(1, 1), strides=1, padding="same")(x)
-#         return BatchNormalization()(x)
-
-
 class Efficient(Model):
     def __init__(self, output_dim, **kwargs):
         super(Efficient, self).__init__()
