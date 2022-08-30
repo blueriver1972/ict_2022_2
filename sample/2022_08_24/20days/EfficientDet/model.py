@@ -150,18 +150,38 @@ class MBConv(Layer):
         self,
         filters_in,
         filters_out,
-        kernel_size,
+        kernel_size=(3, 3),
         strides=1,
         expand=1,
         is_skip=True,
         **kwargs
     ):
+        super().__init__(**kwargs)        
         self.filters = filters_in * expand
+        self.filters_in = filters_in
         self.filters_out = filters_out
         self.expand = expand
         self.strides = strides
         self.kernel_size = kernel_size
-        self.padding = "valid" if strides == 2 else "same"
+        self.padding = "same"
+        self.is_skip = is_skip
+    def build(self, input_shape):
+        if 1 < self.expand:
+            self.Conv2D_enpand = Conv2D(
+                self.filters, kernel_size=(1, 1), strides=1, padding="same"
+            )    
+            self.BN_expand = BatchNormalization()
+            self.Swish_expand = Swish()
+        if 2 == self.strides:
+            self.ZeroPadding2D = ZeroPadding2D(
+                paddding=_correct_pad(input_shape, self.kernel_size)
+            )
+            self.padding = "valid"
+        self.DepthwiseConv2D = DepthwiseConv2D(
+            kernel_size=self.kernel_size,
+            strides=self.strides,
+            padding=self.padding,
+        )
 
     def call(self, inputs):
         # in dims = [batch, H, W, filters_in]
