@@ -45,22 +45,36 @@ class VOC:
         self.tree = ET.parse(self.annotations_dir+xml_name)
         return self.tree.getroot()
 
+    def example(self, nums=10, shufle=True):
+        bbox = BBox()
+        globs = glob(self.annotations_dir + "*.xml")
+
+        for _ in range(nums):
+            fname = random.choice(globs)
+            fname = os.path.basename(fname) 
+            
+            img, bboxs = voc.img_n_bbox(fname)  
+            bbox.show(img, bboxs)   
+ 
+    
     
 if __name__ == "__main__":
     voc = VOC(ROOT_DIR)
-    bbox = BBox()
+    voc.example()
+    
+    # bbox = BBox()
 
-    globs = glob(ANNOTATIONS_DIR + "*")
-    #print(globs[0])
+    # globs = glob(ANNOTATIONS_DIR + "*.xml")
+    # #print(globs[0])
     
-    for rn in range(10):
-        #file_name = os.path.basename(random.choice(globs))
-        img, bboxs = voc.img_n_bbox(os.path.basename(random.choice(globs)))   
-        #print(bboxs)
-        #print(file_name)
-        bbox.show(img, bboxs)
+    # for rn in range(10):
+    #     #file_name = os.path.basename(random.choice(globs))
+    #     img, bboxs = voc.img_n_bbox(os.path.basename(random.choice(globs)))   
+    #     #print(bboxs)
+    #     #print(file_name)
+    #     bbox.show(img, bboxs)
     
-    #img, bboxs = voc.img_n_bbox("2007_000032.xml")   
+    # #img, bboxs = voc.img_n_bbox("2007_000032.xml")   
     
     
     
