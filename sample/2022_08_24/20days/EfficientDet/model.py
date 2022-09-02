@@ -228,14 +228,15 @@ class MBConv(Layer):
         x = self.Conv2D_SE(x)
         x = self.BN_SE(x)
 
-       if self.is_skip and self.strides == 1 and self.filtes_in == self.filtes_out:
+       if self.is_skip and self.strides == 1 and self.filters_in == self.filters_out:
            x = self.add([x, inputs])
         return x
 
 class Efficient(Model):
-    def __init__(self, output_dim, **kwargs):
+    def __init__(self, output_dim, has_top, **kwargs):
         super(Efficient, self).__init__()
         self.output_dim = output_dim
+        self.has_top = has_top
 
     def build(self, input_shape):
         self.ZeroPadding2D_input = ZeroPadding2D(
@@ -275,7 +276,8 @@ class Efficient(Model):
         self.BN_out = BatchNormalization()
         self.Swith_out = Swish()
         self.GAP_out = GlobalAveragePooling2D()
-        self.out = Dense(self.output_dim, activation="softmax")      
+        if has_top:
+            self.out = Dense(self.output_dim, activation="softmax")      
         super(Efficient, self).build(input_shape)
         
         
@@ -303,6 +305,91 @@ class Efficient(Model):
         x = self.Conv2D_out(x))
         x = self.BN_out(x)
         x = self.Swith_out(x)
-        x = self.GAP_out(x)
+        if has_top
+            x = self.GAP_out(x)
 
         return self.out(x)
+        
+class ResampleFeatureMap(Layer):
+    def __init__(self, input_features, filters):
+        super().__init__()
+        self.filters = filters  
+        self.n_features = len(input_features)    
+        if self.n_features != 1:
+        self.src_shape = input_features[0].output.shape
+        self.dst_shape = input_features[1].output.shape
+        self.factor = {            
+            self.dst_shape[1] / self.src_shape[1],
+            self.dst_shape[2] / self.src_shape[2],
+        } 
+        
+    def build(self, input_shape):
+        self.Conv2D_dst = Conv2D(self.filters, kernel_size=(1, 1))
+        if self.n_features != 1:
+            self.Conv2D_src = Conv2D(self.filtrs, kernel_size=(1, 1))
+            if self.factor != 1:
+                self.UpSampling2D = UpSampling2D(self.factor)
+            self.add = Add()
+        super(ResampleFeatureMap, self).build(input_shape)
+        
+    def call(self, inputs):
+        if self.n_features == 1:
+            dst = self.Conv2D_dst(inputs)
+        else:
+            src, dst = inputs 
+            src = self.Conv2D_src(src)
+            dst = self.Conv2D_dst(dst)
+            if self.factor != 1:
+                src = self.UpSampling2D(src)
+            dst = self.add(src, dst)
+            
+        return dst
+        
+class FPN(Model):
+           
+    def build(self, input_shape):
+        # NOTE [(7, 7, 320)] -> (7, 7, 64)
+        self.re_7 = Conv2D(64, kernel_size=(1, 1))
+        
+        # NOTE [(7, 7, 64), (7, 7, 192)] -> (7, 7, 64)
+        self.re_6 = Conv2D(64, kernel_size=(1, 1))
+        self.add_7_6 = Add()
+        
+        # NOTE [(7, 7, 64), (14, 14, 112)] -> (14, 14, 64) 
+        self.re_6 = UpSamepling2D(2)
+        self.re_5 = Conv2D(64, kernel_size=(1, 1))
+        self.add_6_5 = Add()          
+        
+        # NOTE [(14, 14, 64), (14, 14, 80)] -> (14, 14, 64) 
+        self.re_4 = Conv2D(64, kernel_size=(1, 1))
+        self.add_5_4 = Add()  
+           
+        # NOTE [(14, 14, 64), (28, 28, 80)] -> (14, 14, 64)     
+        self.re_4 = UpSamepling2D(2)
+        self.re_3 = Conv2D(64, kernel_size=(1, 1))
+        self.add_4_3 = Add() 
+        
+        super().build(input_shape)
+        
+    def call(self, inputs):        
+        layer_7, layer_6, layer_5, layer_4, layer_3 = inputs
+    
+        re7 = self.re_7(layer_7)
+        
+        re6 = self.re_6(layer_6)
+        add7_6 = self.add_7_6([re7, re6])
+ 
+        up6 = self.up_6(add7_6)
+        re6 = self.re_5(layer_5)
+        add6_5 = self.add_6_5([up6, re5])
+        
+        re4 = self.re_4(layer_4)
+        add5_4= self.add_5_4([add6_5, re4])     
+        
+        up4 = self.up_4(add5_4)
+        re3 = self.re_3(layer_3)
+        add4_3 = self.add_4_35([up4, re3])     
+        
+        print(f"SHAPe: {re7.shape}, {add7_6.shape}, {add6_5.shape}, {add5_4.shape}, {add4_3.shape}")          
+        
+        return (re7, add7_6, add6_5, add5_4, add4_3)
