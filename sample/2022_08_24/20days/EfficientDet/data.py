@@ -4,11 +4,15 @@ from glob import glob
 import cv2
 import random
 import math
+from enum import Enum 
 
 
 WNIDS = "./data/tiny-imagenet-200/wnids.txt"
 WORDS = "./data/tiny-imagenet-200/words.txt"
 TRAIN_DIR = "./data/tiny-imagenet-200/train/"
+
+class Clsses(Enum):
+    pass 
 
 
 class Dataset:
@@ -38,7 +42,7 @@ class Dataset:
             if not wnid:
                 break
             class_names.append(class_dict)
-
+        print(class_names)
         wnids.close()
         words.close()
         return class_names
@@ -70,6 +74,8 @@ class Dataset:
         bbox_annotations = []
         for bbox_txt in bbox_texts:
             bbox_annotations.extend(self._bbox(bbox_txt))
+            
+        print(bbox_annotations)
         return bbox_annotations
 
     def _train_metadata(self):
@@ -82,7 +88,8 @@ class Dataset:
         # INFO: -> {"fname": "n02795169_210.JPEG", "bbox": (0, 0, 1, 1), "class": "cat", "image": img}
         new = []
         for b in bbox:
-            key = b["fname"].split("_")[0]
+            fname = os.path.basename(b["fname"])
+            key = fname.split("_")[0]
             for name_dict in cls_name:
                 if key in name_dict:
                     b.update({"class": name_dict.get(key)})
@@ -91,9 +98,10 @@ class Dataset:
 
     #TODO list comprehension
     def _images(self, metadata):
-        images = {}
+        images = []
         for element in metadata:
             img = cv2.imread(element["fname"])
+            im = cv.resize(img, (224, 224))
             images.append(img)
         return images
     
@@ -104,14 +112,20 @@ class Dataset:
             clss = (element["class"])
             label = {"bbox": bbox, "class": clss}
 
-        return images, labels    
+        return labels    
+      
+    def update(self):
+        self.train_metata = self._train_metadata()  
         
-        
-    def call(self):
-        self._train_metadata()
+    def __call__(self):
         batch_metadata = random.sample(self.train_metadata, self.batch_size)
-        images =self._images(ba)
-        labels =_
+        images =self._images(batch_metadata)
+        labels =self._labels(batch_metadata)
+        for metadata in batch_metadata:
+            self.train_metadata.remove(metadata)
+        # print("LEN: ")
+        # print(len(self.train_metadata))
+        
         return images, labels
 
     
@@ -120,5 +134,4 @@ if __name__ == "__main__":
     #INFO 1000 / 32 = 31.25 -- ceil() --> 32
     for i in range(math.ceil(ds.num_train_dataset/ds.batch_size)):
         images, labels = ds()
-        print(images)
-        print(labels)
+    ds.update() 
