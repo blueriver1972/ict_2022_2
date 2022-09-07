@@ -92,7 +92,9 @@ if __name__ == "__main__":
                 class_predict, bbox_prdict = model(x_batch)
                 main_loss = loss_categorical(y_batch['class'], class_predict)
                 aux_loss = loss_mse(y_batch['bbox'], bbox_prdict)
-            
+                
+               
+
             gradients = tape.gradient([main_loss, aux_loss], model.trainalbe_variables) # back 
             optimizer.apply_gradients(zip(gradient, model.trainable_variables))
             

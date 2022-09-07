@@ -11,10 +11,6 @@ WNIDS = "./data/tiny-imagenet-200/wnids.txt"
 WORDS = "./data/tiny-imagenet-200/words.txt"
 TRAIN_DIR = "./data/tiny-imagenet-200/train/"
 
-class Clsses(Enum):
-    pass 
-
-
 class Dataset:
     def __init__(self, batch_size):
         self.batch_size = batch_size
